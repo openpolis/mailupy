@@ -10,7 +10,7 @@ class Mailupy:
     AUTH_URL = "https://services.mailup.com/Authorization/OAuth/Token"
     BASE_URL = "https://services.mailup.com/API/v1.1/Rest/ConsoleService.svc/Console"
 
-    def __init__(self, username, password, client_id, client_secret, auto_login=True):
+    def __init__(self, username, password, client_id, client_secret):
         self._token = None
         self._mailup_user = {
             'username' : username,
@@ -18,8 +18,7 @@ class Mailupy:
             'client_id' : client_id,
             'client_secret' : client_secret
         }
-        if auto_login:
-            self.login()
+        self.login()
 
     def _error_printer(self, typo, url, resp, *args, **kwargs):
         time = datetime.datetime.now().strftime('%H:%M:%S %d-%m-%Y')
