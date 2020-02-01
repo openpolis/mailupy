@@ -5,26 +5,31 @@ import datetime
 from time import sleep
 
 
-class Mailupy:
+class MailupyException(Exception):
+    def __init__(self, response):
+        super(MailupyException, self).__init__(f"Error {response.status_code} - {response.json()['ErrorDescription']}")
 
+
+class Mailupy:
     AUTH_URL = "https://services.mailup.com/Authorization/OAuth/Token"
     BASE_URL = "https://services.mailup.com/API/v1.1/Rest/ConsoleService.svc/Console"
 
-    def __init__(self, username, password, client_id, client_secret):
+    def __init__(self, username, password, client_id, client_secret, error_log=False):
         self._token = None
         self._mailup_user = {
-            'username' : username,
-            'password' : password,
-            'client_id' : client_id,
-            'client_secret' : client_secret
+            'username': username,
+            'password': password,
+            'client_id': client_id,
+            'client_secret': client_secret
         }
+        self._error_log = error_log
         self.login()
 
     def _error_printer(self, typo, url, resp, *args, **kwargs):
         time = datetime.datetime.now().strftime('%H:%M:%S %d-%m-%Y')
         with open("mailup_error.log", "a") as f:
             print(f"    =======================>  {time}  <=======================", file=f)
-            print(f"[MAILUP USER]: {self._mailup_user.name}\n[URL]: {url}", file=f)
+            print(f"[MAILUP USER]: {self._mailup_user['username']}\n[URL]: {url}", file=f)
             print(f"[REQUEST]:\ntype =====> {typo}", file=f)
             for key, value in kwargs.items():
                 print(f"{key} =====> {value}", file=f)
@@ -47,9 +52,14 @@ class Mailupy:
             resp = requests.delete(url, **kwargs)
         if resp.status_code == 429:
             sleep(5)
-            self._requests_wrapper(typo, url, *args, **kwargs)
+            resp = self._requests_wrapper(typo, url, *args, **kwargs)
+        if resp.status_code == 401:
+            self._refresh_my_token()
+            resp = self._requests_wrapper(typo, url, *args, **{**kwargs, 'headers': self._default_headers()})
         if resp.status_code >= 400:
-            self._error_printer(typo, url, resp, **kwargs)
+            if self._error_log:
+                self._error_printer(typo, url, resp, **kwargs)
+            raise MailupyException(resp)
         sleep(0.25)
         return resp
 
@@ -61,10 +71,10 @@ class Mailupy:
             f'{url}{spacer}pageNumber={current}',
             headers=self._default_headers()
         ).json()
-        total = data['TotalElementsCount']//data['PageSize']
+        total = data['TotalElementsCount'] // data['PageSize']
         items += data['Items']
         if total - current:
-            self._download_all_pages(url, current+1, items)
+            self._download_all_pages(url, current + 1, items)
         return {'WrappedPages': total, 'Items': items}
 
     def _default_headers(self):
@@ -79,7 +89,7 @@ class Mailupy:
             'client_id': self._mailup_user['client_id'],
             'client_secret': self._mailup_user['client_secret'],
             'refresh_token': self._refresh_token,
-            }
+        }
         resp = self._requests_wrapper(
             'POST',
             f'{self.AUTH_URL}',
@@ -89,7 +99,7 @@ class Mailupy:
             self._token = resp.json()['access_token']
             self._refresh_token = resp.json()['refresh_token']
             return True
-        return False
+        raise MailupyException(resp)
 
     def login(self):
         payload = {
@@ -138,7 +148,8 @@ class Mailupy:
         return self._download_all_pages(f'{self.BASE_URL}/Group/{group_id}/Recipients')
 
     def get_message_by_subject(self, list_id, subject):
-        return self._download_all_pages(f'{self.BASE_URL}/List/{list_id}/Emails?filterby="Subject.Contains(%27{subject}%27)"')
+        return self._download_all_pages(
+            f'{self.BASE_URL}/List/{list_id}/Emails?filterby="Subject.Contains(%27{subject}%27)"')
 
     def get_message_by_tags(self, list_id, tags):
         tags = ', '.join(tags)
@@ -210,8 +221,6 @@ class Mailupy:
         payload = json.dumps({
             "Name": user_name,
             "Email": user_email,
-            "MobileNumber": user.telephone,
-            "idRecipient": user.mailup_id,
             "Fields": self._build_mailup_fields(fields)
         })
         resp = self._requests_wrapper(
@@ -255,7 +264,7 @@ class Mailupy:
                 return True
             return False
         resp = self._requests_wrapper(
-            'DELETE'
+            'DELETE',
             f'{self.BASE_URL}/List/{list_id}/Recipient/{user_mailup_id}',
             headers=self._default_headers(),
         )
