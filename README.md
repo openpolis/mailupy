@@ -1,6 +1,6 @@
 # mailupy
 
-💌 Yet another Mailup Python client
+💌 Yet another [MailUp](https://www.mailup.it/) Python client
 
 [![Latest Version](https://img.shields.io/pypi/v/mailupy.svg)](https://pypi.python.org/pypi/mailupy/)
 [![codecov](https://codecov.io/gh/lotrekagency/mailupy/branch/master/graph/badge.svg)](https://codecov.io/gh/lotrekagency/mailupy)
