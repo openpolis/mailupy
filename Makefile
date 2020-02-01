@@ -5,5 +5,5 @@ clean:
 	@find . -name "__pycache__" -type d | xargs rm -rf
 
 test: clean
-  @flake8 mailupy
+	@flake8 mailupy
 	@pytest --cov mailupy -s --cov-report term-missing

@@ -1,1 +1,1 @@
-from .client import Mailupy
+from .client import Mailupy # NOQA

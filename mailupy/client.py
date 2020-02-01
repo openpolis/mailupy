@@ -1,7 +1,6 @@
-import os
+import datetime
 import json
 import requests
-import datetime
 from time import sleep
 
 
