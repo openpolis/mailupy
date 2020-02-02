@@ -7,3 +7,6 @@ clean:
 test: clean
 	@flake8 mailupy
 	@pytest --cov mailupy -s --cov-report term-missing
+
+docs: clean
+	@sphinx-build -b html ./docs mailupy_docs

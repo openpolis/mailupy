@@ -31,3 +31,7 @@ error_logs.log
 #Build
 dist/
 *.egg-info/
+mailupy_docs
+
+# Testing
+spike.py
