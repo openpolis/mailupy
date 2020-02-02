@@ -68,10 +68,10 @@ class TestClient(unittest.TestCase):
         assert m.subscribe_to_group(6, 'ASDFGHJKL', 'email@email.email', {'test': 'test'}) == 18
 
     @patch('mailupy.Mailupy._requests_wrapper', side_effect=mock_request)
-    def test_update_customer_field(self, func):
+    def test_update_customer_fields(self, func):
         m = Mailupy('username', 'password', 'client-id', 'client-secret')
 
-        assert m.update_customer_field('ASDFGHJKL', 'email+1@email.email', {'test': 'test1'})['idRecipient'] == 18
+        assert m.update_customer_fields('ASDFGHJKL', 'email+1@email.email', {'test': 'test1'})['idRecipient'] == 18
 
     @patch('mailupy.Mailupy._requests_wrapper', side_effect=mock_request)
     def test_unsubscribe_from_list(self, func):
