@@ -14,7 +14,6 @@ setup(
     include_package_data=True,
     classifiers=[
         'Environment :: Web Environment',
-        
         'Intended Audience :: Developers',
         'Programming Language :: Python',
         'Programming Language :: Python :: 3'

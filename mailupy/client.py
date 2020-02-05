@@ -1,7 +1,8 @@
 import json
-import requests
+import urllib
 from .debugger import error_printer
 from .exceptions import MailupyException, MailupyRequestException
+from .utils import type_to_request_function
 
 
 class Mailupy:
@@ -10,6 +11,7 @@ class Mailupy:
     BASE_URL = "https://services.mailup.com/API/v1.1/Rest/ConsoleService.svc/Console"
 
     def __init__(self, username, password, client_id, client_secret, error_log=False):
+        self._filters = {}
         self._token = None
         self._mailup_user = {
             'username': username,
@@ -20,52 +22,49 @@ class Mailupy:
         self._error_log = error_log
         self.login()
 
-    def _requests_wrapper(self, typo, url, *args, **kwargs):
+    def _requests_wrapper(self, req_type, url, *args, **kwargs):
         try:
-            if typo == 'GET':
-                resp = requests.get(url, **kwargs)
-            elif typo == 'POST':
-                resp = requests.post(url, **kwargs)
-            elif typo == 'PUT':
-                resp = requests.put(url, **kwargs)
-            elif typo == 'DELETE':
-                resp = requests.delete(url, **kwargs)
+            resp = type_to_request_function[req_type](url, **kwargs)
         except Exception as ex:
             raise MailupyException(ex)
         if resp.status_code == 429:
-            resp = self._requests_wrapper(typo, url, *args, **kwargs)
+            resp = self._requests_wrapper(req_type, url, *args, **kwargs)
         if resp.status_code == 401:
             self._refresh_my_token()
-            resp = self._requests_wrapper(typo, url, *args, **{**kwargs, 'headers': self._default_headers()})
+            resp = self._requests_wrapper(req_type, url, *args, **{**kwargs, 'headers': self._default_headers()})
         if resp.status_code >= 400:
             if self._error_log:
                 error_printer(
                     self._mailup_user['username'],
-                    typo, url, resp,
+                    req_type, url, resp,
                     **kwargs
                 )
             raise MailupyRequestException(resp)
         return resp
 
-    def _download_all_pages(self, url, current=0, items=[], single_page=None):
+    def _download_all_pages(self, url, single_page=None):
+        total = 1
+        current = 0
         spacer = '&' if '?' in url else '?'
-        items = items if current else []
+        is_paginated = True
         if single_page is not None:
-            return self._requests_wrapper(
+            data = self._requests_wrapper(
                 'GET',
                 f'{url}{spacer}pageNumber={single_page}',
                 headers=self._default_headers()
             ).json()
-        data = self._requests_wrapper(
-            'GET',
-            f'{url}{spacer}pageNumber={current}',
-            headers=self._default_headers()
-        ).json()
-        total = data['TotalElementsCount'] // data['PageSize']
-        items += data['Items']
-        if total - current:
-            self._download_all_pages(url, current + 1, items)
-        return {'WrappedPages': total, 'Items': items}
+            return data['Items']
+        while total - current and is_paginated:
+            data = self._requests_wrapper(
+                'GET',
+                f'{url}{spacer}pageNumber={current}',
+                headers=self._default_headers()
+            ).json()
+            total = data['TotalElementsCount'] // data['PageSize']
+            is_paginated = data['IsPaginated']
+            for item in data['Items']:
+                yield item
+            current = current + 1
 
     def _default_headers(self):
         headers = {'Content-type': 'application/json'}
@@ -92,10 +91,9 @@ class Mailupy:
         raise MailupyRequestException(resp)
 
     def _build_mailup_fields(self, fields={}):
-        avaiabe_fields = self.get_fields()
         mailup_fields = list()
         fields_id = dict()
-        for elem in avaiabe_fields['Items']:
+        for elem in self.get_fields():
             fields_id[elem['Description']] = elem['Id']
         for key, value in fields.items():
             if key in fields_id.keys():
@@ -105,6 +103,19 @@ class Mailupy:
                     "Value": value
                 })
         return mailup_fields
+
+    def _parse_filter_ordering(self, **filter_ordering):
+        if 'order_by' in filter_ordering:
+            filter_ordering['order_by'] = ';'.join([el for el in filter_ordering['order_by']])
+        query = '&'.join([
+            '{0}={1}'.format(k.replace('_', ''), urllib.parse.quote_plus(v)) for k, v in filter_ordering.items()
+        ])
+        return query
+
+    def _build_url(self, url, query_parameters=None):
+        if query_parameters:
+            return f'{self.BASE_URL}{url}?{query_parameters}'
+        return f'{self.BASE_URL}{url}'
 
     def login(self):
         payload = {
@@ -125,43 +136,81 @@ class Mailupy:
             return True
         return False
 
-    def get_fields(self, page=None):
-        return self._download_all_pages(f'{self.BASE_URL}/Recipient/DynamicFields')
-
-    def get_groups_from_list(self, list_id, page=None):
+    def get_fields(self, **filter_ordering):
+        query = self._parse_filter_ordering(**filter_ordering)
         return self._download_all_pages(
-            f'{self.BASE_URL}/List/{list_id}/Groups',
-            single_page=page
+            self._build_url(f'/Recipient/DynamicFields', query)
         )
 
-    def get_users_from_list(self, list_id, page=None):
+    def get_groups_from_list(self, list_id, **filter_ordering):
+        query = self._parse_filter_ordering(**filter_ordering)
         return self._download_all_pages(
-            f'{self.BASE_URL}/List/{list_id}/Recipients/EmailOptins',
-            single_page=page
+            self._build_url(f'/List/{list_id}/Groups', query)
         )
 
-    def get_users_from_group(self, group_id, page=None):
+    def _get_users_from_generic_list(self, list_type, list_id, **filter_ordering):
+        query = self._parse_filter_ordering(**filter_ordering)
         return self._download_all_pages(
-            f'{self.BASE_URL}/Group/{group_id}/Recipients',
-            single_page=page
+            self._build_url(f'/List/{list_id}/Recipients/{list_type}', query)
         )
 
-    def get_message_by_subject(self, list_id, subject, page=None):
+    def get_users_from_list(self, list_id, **filter_ordering):
+        return self._get_users_from_generic_list('EmailOptins', list_id, **filter_ordering)
+
+    def get_subscribed_users_from_list(self, list_id, **filter_ordering):
+        return self._get_users_from_generic_list('Subscribed', list_id, **filter_ordering)
+
+    def get_unsubscribed_users_from_list(self, list_id, **filter_ordering):
+        return self._get_users_from_generic_list('Unsubscribed', list_id, **filter_ordering)
+
+    def _get_user_from_generic_list(self, list_type, list_id, user_email):
+        query = self._parse_filter_ordering(filter_by=f"Email=='{user_email}'")
+        resp = self._requests_wrapper(
+            'GET',
+            self._build_url(f'/List/{list_id}/Recipients/{list_type}', query),
+            headers=self._default_headers()
+        )
+        if resp.json()['Items']:
+            return resp.json()['Items'][0]
+        else:
+            return None
+
+    def get_user_from_list(self, list_id, user_email):
+        return self._get_user_from_generic_list('EmailOptins', list_id, user_email)
+
+    def get_subscribed_user_from_list(self, list_id, user_email):
+        return self._get_user_from_generic_list('Subscribed', list_id, user_email)
+
+    def get_unsubscribed_user_from_list(self, list_id, user_email):
+        return self._get_user_from_generic_list('Unsubscribed', list_id, user_email)
+
+    def get_users_from_group(self, group_id, **filter_ordering):
+        query = self._parse_filter_ordering(**filter_ordering)
         return self._download_all_pages(
-            f'{self.BASE_URL}/List/{list_id}/Emails?filterby="Subject.Contains(%27{subject}%27)"',
-            single_page=page
+            self._build_url(f'/Group/{group_id}/Recipients', query)
         )
 
-    def get_message_by_tags(self, list_id, tags, page=None):
-        tags = ', '.join(tags)
+    def get_user_from_group(self, group_id, user_email):
+        query = self._parse_filter_ordering(filter_by=f"Email=='{user_email}'")
+        resp = self._requests_wrapper(
+            'GET',
+            self._build_url(f'/Group/{group_id}/Recipients', query),
+            headers=self._default_headers()
+        )
+        if resp.json()['Items']:
+            return resp.json()['Items'][0]
+        else:
+            return None
+
+    def get_messages_from_list(self, list_id, tags=[], **filter_ordering):
+        filter_ordering['tags'] = ','.join(tags)
+        query = self._parse_filter_ordering(**filter_ordering)
         return self._download_all_pages(
-            f'{self.BASE_URL}/List/{list_id}/Emails?tags="{tags}"',
-            single_page=page
+            self._build_url(f'/List/{list_id}/Emails', query)
         )
 
     def get_or_create_group(self, list_id, group_name):
-        group_list = self.get_groups_from_list(list_id)
-        for group in group_list.get('Items', []):
+        for group in self.get_groups_from_list(list_id).get('Items', []):
             if group.get('Name', '') == group_name:
                 return group.get('idGroup', None), False
         group = self.create_group(list_id, group_name)
