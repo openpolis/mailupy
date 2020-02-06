@@ -29,13 +29,13 @@ client = Mailupy(
 Use the client to get information
 
 ```py
-    for field in client.get_fields():
-        print (field)
+for field in client.get_fields():
+    print (field)
 ```
 
 ```py
-    for group in client.get_groups_from_list(1):
-        print (group)
+for group in client.get_groups_from_list(1):
+    print (group)
 ```
 
 Getting users from lists using [Ordering and Filtering (Mailup Documentation)](http://help.mailup.com/display/mailupapi/Paging+and+filtering)
