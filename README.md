@@ -9,9 +9,11 @@
 
 ## Install
 
-TODO
+```sh
+pip install mailupy
+```
 
-## Usage
+## How to use
 
 Import Mailupy and instantiate the client
 
@@ -26,7 +28,9 @@ client = Mailupy(
 )
 ```
 
-Use the client to get information
+## Examples
+
+Getting information about fields, groups...
 
 ```py
 for field in client.get_fields():
@@ -57,7 +61,15 @@ for user in client.get_subscribed_users_from_list(
 Getting a subscribed user from a list
 
 ```py
-print (client.get_subscribed_user_from_list(1, 'andrea.stagi@lotrek.it'))
+client.get_subscribed_user_from_list(1, 'andrea.stagi@lotrek.it')
+```
+
+Subscribe/Unsubscribe user to/from lists
+
+```py
+recipient_id = client.subscribe_to_list(1, 'Andrea Stagi', 'stagi.andrea@gmail.com')
+
+client.unsubscribe_from_list(1, recipient_id)
 ```
 
 ## Run tests

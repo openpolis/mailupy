@@ -140,7 +140,6 @@ class Mailupy:
             self._token = resp.json()['access_token']
             self._refresh_token = resp.json()['refresh_token']
             return True
-        return False
 
     def get_fields(self, **filter_ordering):
         query = self._parse_filter_ordering(**filter_ordering)
