@@ -117,6 +117,24 @@ class Mailupy:
             return f'{self.BASE_URL}{url}?{query_parameters}'
         return f'{self.BASE_URL}{url}'
 
+    def _get_users_from_generic_list(self, list_type, list_id, **filter_ordering):
+        query = self._parse_filter_ordering(**filter_ordering)
+        return self._download_all_pages(
+            self._build_url(f'/List/{list_id}/Recipients/{list_type}', query)
+        )
+
+    def _get_user_from_generic_list(self, list_type, list_id, user_email):
+        query = self._parse_filter_ordering(filter_by=f"Email=='{user_email}'")
+        resp = self._requests_wrapper(
+            'GET',
+            self._build_url(f'/List/{list_id}/Recipients/{list_type}', query),
+            headers=self._default_headers()
+        )
+        if resp.json()['Items']:
+            return resp.json()['Items'][0]
+        else:
+            return None
+
     def login(self):
         payload = {
             'grant_type': 'password',
@@ -148,12 +166,6 @@ class Mailupy:
             self._build_url(f'/List/{list_id}/Groups', query)
         )
 
-    def _get_users_from_generic_list(self, list_type, list_id, **filter_ordering):
-        query = self._parse_filter_ordering(**filter_ordering)
-        return self._download_all_pages(
-            self._build_url(f'/List/{list_id}/Recipients/{list_type}', query)
-        )
-
     def get_users_from_list(self, list_id, **filter_ordering):
         return self._get_users_from_generic_list('EmailOptins', list_id, **filter_ordering)
 
@@ -162,18 +174,6 @@ class Mailupy:
 
     def get_unsubscribed_users_from_list(self, list_id, **filter_ordering):
         return self._get_users_from_generic_list('Unsubscribed', list_id, **filter_ordering)
-
-    def _get_user_from_generic_list(self, list_type, list_id, user_email):
-        query = self._parse_filter_ordering(filter_by=f"Email=='{user_email}'")
-        resp = self._requests_wrapper(
-            'GET',
-            self._build_url(f'/List/{list_id}/Recipients/{list_type}', query),
-            headers=self._default_headers()
-        )
-        if resp.json()['Items']:
-            return resp.json()['Items'][0]
-        else:
-            return None
 
     def get_user_from_list(self, list_id, user_email):
         return self._get_user_from_generic_list('EmailOptins', list_id, user_email)
@@ -223,20 +223,18 @@ class Mailupy:
             "Email": email,
             "idMessage": message_id
         })
-        resp = self._requests_wrapper(
+        self._requests_wrapper(
             'POST',
-            f'{self.BASE_URL}/Email/Send',
+            self._build_url('/Email/Send'),
             headers=self._default_headers(),
             data=payload
         )
-        if resp.status_code == 200:
-            return True
-        return False
+        return True
 
     def create_group(self, list_id, group_name, notes=''):
         resp = self._requests_wrapper(
             'POST',
-            f'{self.BASE_URL}/List/{list_id}/Group',
+            self._build_url(f'/List/{list_id}/Group'),
             headers=self._default_headers(),
             data=json.dumps({"Name": group_name, "Notes": notes})
         )
@@ -250,12 +248,10 @@ class Mailupy:
         })
         resp = self._requests_wrapper(
             'PUT',
-            f'{self.BASE_URL}/Recipient/Detail',
+            self._build_url('/Recipient/Detail'),
             headers=self._default_headers(),
             data=payload
         )
-        if resp.status_code != 200:
-            return False
         return resp.json()
 
     def subscribe_to_list(self, list_id, user_name, user_email, fields={}):
@@ -266,7 +262,7 @@ class Mailupy:
         })
         resp = self._requests_wrapper(
             'POST',
-            f'{self.BASE_URL}/List/{list_id}/Recipient',
+            self._build_url(f'/List/{list_id}/Recipient'),
             headers=self._default_headers(),
             data=payload
         )
@@ -280,47 +276,39 @@ class Mailupy:
         })
         resp = self._requests_wrapper(
             'POST',
-            f'{self.BASE_URL}/Group/{group_id}/Recipient',
+            self._build_url(f'/Group/{group_id}/Recipient'),
             headers=self._default_headers(),
             data=payload
         )
         return resp.json()
 
     def unsubscribe_from_list(self, list_id, user_mailup_id):
-        resp = self._requests_wrapper(
+        self._requests_wrapper(
             'DELETE',
-            f'{self.BASE_URL}/List/{list_id}/Unsubscribe/{user_mailup_id}',
+            self._build_url(f'/List/{list_id}/Unsubscribe/{user_mailup_id}'),
             headers=self._default_headers(),
         )
-        if resp.status_code == 200:
-            return True
-        return False
+        return True
 
     def unsubscribe_from_group(self, group_id, user_mailup_id):
-        resp = self._requests_wrapper(
+        self._requests_wrapper(
             'DELETE',
-            f'{self.BASE_URL}/Group/{group_id}/Unsubscribe/{user_mailup_id}',
+            self._build_url(f'/Group/{group_id}/Unsubscribe/{user_mailup_id}'),
             headers=self._default_headers(),
         )
-        if resp.status_code == 200:
-            return True
-        return False
+        return True
 
     def remove_from_list(self, list_id, user_mailup_id):
         if list_id == 'all':
-            resp = self._requests_wrapper(
+            self._requests_wrapper(
                 'DELETE',
-                f'{self.BASE_URL}/Recipients/{user_mailup_id}',
+                self._build_url(f'/Recipients/{user_mailup_id}'),
                 headers=self._default_headers(),
             )
-            if resp.status_code == 200:
-                return True
-            return False
-        resp = self._requests_wrapper(
-            'DELETE',
-            f'{self.BASE_URL}/List/{list_id}/Recipient/{user_mailup_id}',
-            headers=self._default_headers(),
-        )
-        if resp.status_code == 200:
-            return True
-        return False
+        else:
+            self._requests_wrapper(
+                'DELETE',
+                self._build_url(f'/List/{list_id}/Recipient/{user_mailup_id}'),
+                headers=self._default_headers(),
+            )
+        return True
