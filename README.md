@@ -41,23 +41,23 @@ Use the client to get information
 Getting users from lists using [Ordering and Filtering (Mailup Documentation)](http://help.mailup.com/display/mailupapi/Paging+and+filtering)
 
 ```py
-    for group in client.get_groups_from_list(
-          1, filter_by='Name.Contains(\'Farm\')',
-          order_by=['Name asc', 'idGroup desc']):
-        print (group)
+for group in client.get_groups_from_list(
+        1, filter_by='Name.Contains(\'Farm\')',
+        order_by=['Name asc', 'idGroup desc']):
+    print (group)
 ```
 
 ```py
-    for user in client.get_subscribed_users_from_list(
-          1, filter_by='Email.Contains(\'zzz\')',
-          order_by=['Email desc']):
-        print (user['Email'])
+for user in client.get_subscribed_users_from_list(
+        1, filter_by='Email.Contains(\'zzz\')',
+        order_by=['Email desc']):
+    print (user['Email'])
 ```
 
 Getting a subscribed user from a list
 
 ```py
-    print (client.get_subscribed_user_from_list(1, 'andrea.stagi@lotrek.it'))
+print (client.get_subscribed_user_from_list(1, 'andrea.stagi@lotrek.it'))
 ```
 
 ## Run tests

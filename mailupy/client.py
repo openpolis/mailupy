@@ -1,6 +1,6 @@
 import json
 import urllib
-from .debugger import error_printer
+
 from .exceptions import MailupyException, MailupyRequestException
 from .utils import type_to_request_function
 
@@ -10,7 +10,7 @@ class Mailupy:
     AUTH_URL = "https://services.mailup.com/Authorization/OAuth/Token"
     BASE_URL = "https://services.mailup.com/API/v1.1/Rest/ConsoleService.svc/Console"
 
-    def __init__(self, username, password, client_id, client_secret, error_log=False):
+    def __init__(self, username, password, client_id, client_secret):
         self._filters = {}
         self._token = None
         self._mailup_user = {
@@ -19,7 +19,6 @@ class Mailupy:
             'client_id': client_id,
             'client_secret': client_secret
         }
-        self._error_log = error_log
         self.login()
 
     def _requests_wrapper(self, req_type, url, *args, **kwargs):
@@ -31,29 +30,18 @@ class Mailupy:
             resp = self._requests_wrapper(req_type, url, *args, **kwargs)
         if resp.status_code == 401:
             self._refresh_my_token()
-            resp = self._requests_wrapper(req_type, url, *args, **{**kwargs, 'headers': self._default_headers()})
+            resp = self._requests_wrapper(
+                req_type, url, *args, **{**kwargs, 'headers': self._default_headers()}
+            )
         if resp.status_code >= 400:
-            if self._error_log:
-                error_printer(
-                    self._mailup_user['username'],
-                    req_type, url, resp,
-                    **kwargs
-                )
             raise MailupyRequestException(resp)
         return resp
 
-    def _download_all_pages(self, url, single_page=None):
+    def _download_all_pages(self, url):
         total = 1
         current = 0
         spacer = '&' if '?' in url else '?'
         is_paginated = True
-        if single_page is not None:
-            data = self._requests_wrapper(
-                'GET',
-                f'{url}{spacer}pageNumber={single_page}',
-                headers=self._default_headers()
-            ).json()
-            return data['Items']
         while total - current and is_paginated:
             data = self._requests_wrapper(
                 'GET',
