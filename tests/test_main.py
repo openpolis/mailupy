@@ -18,14 +18,14 @@ class TestClient(unittest.TestCase):
         assert list(m.get_groups_from_list(1))[0]['idGroup'] == 6
 
     @patch('mailupy.Mailupy._requests_wrapper', side_effect=mock_request)
-    def test_get_users_from_list(self, func):
+    def test_get_recipients_from_list(self, func):
         m = Mailupy('username', 'password', 'client-id', 'client-secret')
-        assert list(m.get_users_from_list(1))[0]['idRecipient'] == 13
+        assert list(m.get_recipients_from_list(1))[0]['idRecipient'] == 13
 
     @patch('mailupy.Mailupy._requests_wrapper', side_effect=mock_request)
-    def test_get_users_from_group(self, func):
+    def test_get_recipients_from_group(self, func):
         m = Mailupy('username', 'password', 'client-id', 'client-secret')
-        assert list(m.get_users_from_group(6)) == []
+        assert list(m.get_recipients_from_group(6)) == []
 
     @patch('mailupy.Mailupy._requests_wrapper', side_effect=mock_request)
     def test_get_message_by_subject(self, func):

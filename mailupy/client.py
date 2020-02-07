@@ -105,14 +105,14 @@ class Mailupy:
             return f'{self.BASE_URL}{url}?{query_parameters}'
         return f'{self.BASE_URL}{url}'
 
-    def _get_users_from_generic_list(self, list_type, list_id, **filter_ordering):
+    def _get_recipients_from_generic_list(self, list_type, list_id, **filter_ordering):
         query = self._parse_filter_ordering(**filter_ordering)
         return self._download_all_pages(
             self._build_url(f'/List/{list_id}/Recipients/{list_type}', query)
         )
 
-    def _get_user_from_generic_list(self, list_type, list_id, user_email):
-        query = self._parse_filter_ordering(filter_by=f"Email=='{user_email}'")
+    def _get_recipient_from_generic_list(self, list_type, list_id, recipient_email):
+        query = self._parse_filter_ordering(filter_by=f"Email=='{recipient_email}'")
         resp = self._requests_wrapper(
             'GET',
             self._build_url(f'/List/{list_id}/Recipients/{list_type}', query),
@@ -153,32 +153,32 @@ class Mailupy:
             self._build_url(f'/List/{list_id}/Groups', query)
         )
 
-    def get_users_from_list(self, list_id, **filter_ordering):
-        return self._get_users_from_generic_list('EmailOptins', list_id, **filter_ordering)
+    def get_recipients_from_list(self, list_id, **filter_ordering):
+        return self._get_recipients_from_generic_list('EmailOptins', list_id, **filter_ordering)
 
-    def get_subscribed_users_from_list(self, list_id, **filter_ordering):
-        return self._get_users_from_generic_list('Subscribed', list_id, **filter_ordering)
+    def get_subscribed_recipients_from_list(self, list_id, **filter_ordering):
+        return self._get_recipients_from_generic_list('Subscribed', list_id, **filter_ordering)
 
-    def get_unsubscribed_users_from_list(self, list_id, **filter_ordering):
-        return self._get_users_from_generic_list('Unsubscribed', list_id, **filter_ordering)
+    def get_unsubscribed_recipients_from_list(self, list_id, **filter_ordering):
+        return self._get_recipients_from_generic_list('Unsubscribed', list_id, **filter_ordering)
 
-    def get_user_from_list(self, list_id, user_email):
-        return self._get_user_from_generic_list('EmailOptins', list_id, user_email)
+    def get_recipient_from_list(self, list_id, recipient_email):
+        return self._get_recipient_from_generic_list('EmailOptins', list_id, recipient_email)
 
-    def get_subscribed_user_from_list(self, list_id, user_email):
-        return self._get_user_from_generic_list('Subscribed', list_id, user_email)
+    def get_subscribed_recipient_from_list(self, list_id, recipient_email):
+        return self._get_recipient_from_generic_list('Subscribed', list_id, recipient_email)
 
-    def get_unsubscribed_user_from_list(self, list_id, user_email):
-        return self._get_user_from_generic_list('Unsubscribed', list_id, user_email)
+    def get_unsubscribed_recipient_from_list(self, list_id, recipient_email):
+        return self._get_recipient_from_generic_list('Unsubscribed', list_id, recipient_email)
 
-    def get_users_from_group(self, group_id, **filter_ordering):
+    def get_recipients_from_group(self, group_id, **filter_ordering):
         query = self._parse_filter_ordering(**filter_ordering)
         return self._download_all_pages(
             self._build_url(f'/Group/{group_id}/Recipients', query)
         )
 
-    def get_user_from_group(self, group_id, user_email):
-        query = self._parse_filter_ordering(filter_by=f"Email=='{user_email}'")
+    def get_recipient_from_group(self, group_id, recipient_email):
+        query = self._parse_filter_ordering(filter_by=f"Email=='{recipient_email}'")
         resp = self._requests_wrapper(
             'GET',
             self._build_url(f'/Group/{group_id}/Recipients', query),
@@ -227,10 +227,10 @@ class Mailupy:
         )
         return resp.json()
 
-    def update_customer_fields(self, user_name, user_email, fields={}):
+    def update_customer_fields(self, recipient_name, recipient_email, fields={}):
         payload = json.dumps({
-            "Name": user_name,
-            "Email": user_email,
+            "Name": recipient_name,
+            "Email": recipient_email,
             "Fields": self._build_mailup_fields(fields)
         })
         resp = self._requests_wrapper(
@@ -241,10 +241,10 @@ class Mailupy:
         )
         return resp.json()
 
-    def subscribe_to_list(self, list_id, user_name, user_email, fields={}):
+    def subscribe_to_list(self, list_id, recipient_name, recipient_email, fields={}):
         payload = json.dumps({
-            "Name": user_name,
-            "Email": user_email,
+            "Name": recipient_name,
+            "Email": recipient_email,
             "Fields": self._build_mailup_fields(fields)
         })
         resp = self._requests_wrapper(
@@ -255,10 +255,10 @@ class Mailupy:
         )
         return resp.json()
 
-    def subscribe_to_group(self, group_id, user_name, user_email, fields={}):
+    def subscribe_to_group(self, group_id, recipient_name, recipient_email, fields={}):
         payload = json.dumps({
-            "Name": user_name,
-            "Email": user_email,
+            "Name": recipient_name,
+            "Email": recipient_email,
             "Fields": self._build_mailup_fields(fields)
         })
         resp = self._requests_wrapper(
@@ -269,33 +269,33 @@ class Mailupy:
         )
         return resp.json()
 
-    def unsubscribe_from_list(self, list_id, user_mailup_id):
+    def unsubscribe_from_list(self, list_id, recipient_mailup_id):
         self._requests_wrapper(
             'DELETE',
-            self._build_url(f'/List/{list_id}/Unsubscribe/{user_mailup_id}'),
+            self._build_url(f'/List/{list_id}/Unsubscribe/{recipient_mailup_id}'),
             headers=self._default_headers(),
         )
         return True
 
-    def unsubscribe_from_group(self, group_id, user_mailup_id):
+    def unsubscribe_from_group(self, group_id, recipient_mailup_id):
         self._requests_wrapper(
             'DELETE',
-            self._build_url(f'/Group/{group_id}/Unsubscribe/{user_mailup_id}'),
+            self._build_url(f'/Group/{group_id}/Unsubscribe/{recipient_mailup_id}'),
             headers=self._default_headers(),
         )
         return True
 
-    def remove_from_list(self, list_id, user_mailup_id):
+    def remove_from_list(self, list_id, recipient_mailup_id):
         if list_id == 'all':
             self._requests_wrapper(
                 'DELETE',
-                self._build_url(f'/Recipients/{user_mailup_id}'),
+                self._build_url(f'/Recipients/{recipient_mailup_id}'),
                 headers=self._default_headers(),
             )
         else:
             self._requests_wrapper(
                 'DELETE',
-                self._build_url(f'/List/{list_id}/Recipient/{user_mailup_id}'),
+                self._build_url(f'/List/{list_id}/Recipient/{recipient_mailup_id}'),
                 headers=self._default_headers(),
             )
         return True

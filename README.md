@@ -42,7 +42,7 @@ for group in client.get_groups_from_list(1):
     print (group)
 ```
 
-Getting users from lists using [Ordering and Filtering (Mailup Documentation)](http://help.mailup.com/display/mailupapi/Paging+and+filtering)
+Getting recipients from lists using [Ordering and Filtering (Mailup Documentation)](http://help.mailup.com/display/mailupapi/Paging+and+filtering)
 
 ```py
 for group in client.get_groups_from_list(
@@ -52,19 +52,19 @@ for group in client.get_groups_from_list(
 ```
 
 ```py
-for user in client.get_subscribed_users_from_list(
+for recipient in client.get_subscribed_recipients_from_list(
         1, filter_by='Email.Contains(\'zzz\')',
         order_by=['Email desc']):
-    print (user['Email'])
+    print (recipient['Email'])
 ```
 
-Getting a subscribed user from a list
+Getting a subscribed recipient from a list
 
 ```py
-client.get_subscribed_user_from_list(1, 'andrea.stagi@lotrek.it')
+client.get_subscribed_recipient_from_list(1, 'andrea.stagi@lotrek.it')
 ```
 
-Subscribe/Unsubscribe user to/from lists
+Subscribe/Unsubscribe recipient to/from lists
 
 ```py
 recipient_id = client.subscribe_to_list(1, 'Andrea Stagi', 'stagi.andrea@gmail.com')
