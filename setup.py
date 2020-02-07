@@ -2,9 +2,9 @@ from setuptools import setup, find_packages
 
 setup(
     name='mailupy',
-    version='0.0.0',
+    version='1.0.0',
     url='',
-    install_requires=[],
+    install_requires=["requests==2.22.0"],
     description="Yet another Mailup Python client",
     long_description=open('README.rst', 'r').read(),
     license="MIT",
