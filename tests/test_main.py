@@ -84,7 +84,7 @@ class TestClient(unittest.TestCase):
         list(m.get_fields())
         assert m._token == 'good_token'
 
-    @patch('requests.api.request', side_effect=mock_request_refresh_token)
+    @patch('requests.api.request', side_effect=mock_request)
     def test_build_query_params(self, func):
         m = Mailupy('username', 'password', 'client-id', 'client-secret')
         query = m._parse_filter_ordering(
@@ -100,7 +100,6 @@ class TestClient(unittest.TestCase):
             order_by=['Name asc', 'idGroup desc']
         )
         assert query == 'orderby=Name+asc%3BidGroup+desc'
-
 
     @patch('requests.api.request', side_effect=mock_request_400)
     def test_raise_exception_on_401(self, func):

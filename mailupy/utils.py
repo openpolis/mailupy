@@ -7,3 +7,6 @@ type_to_request_function = {
     'PUT': requests.put,
     'DELETE': requests.delete
 }
+"""
+Request type mapping
+"""
