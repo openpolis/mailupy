@@ -53,6 +53,11 @@ class TestClient(unittest.TestCase):
         assert m.subscribe_to_list(1, 'ASDFGHJKL', 'email@email.email') == 16
 
     @patch('mailupy.Mailupy._requests_wrapper', side_effect=mock_request)
+    def test_subscribe_to_list_pending(self, func):
+        m = Mailupy('username', 'password', 'client-id', 'client-secret')
+        assert m.subscribe_to_list(1, 'ASDFGHJKL', 'email@email.email', pending=True) == 16
+
+    @patch('mailupy.Mailupy._requests_wrapper', side_effect=mock_request)
     def test_subscribe_to_group(self, func):
         m = Mailupy('username', 'password', 'client-id', 'client-secret')
         assert m.subscribe_to_group(6, 'ASDFGHJKL', 'email@email.email', {'test': 'test'}) == 18
