@@ -495,7 +495,7 @@ class Mailupy:
         )
         return resp.json()
 
-    def subscribe_to_list(self, list_id, recipient_name, recipient_email, fields={}):
+    def subscribe_to_list(self, list_id, recipient_name, recipient_email, pending=False, fields={}):
         """
         Subscribe recipient to a list.
 
@@ -514,14 +514,18 @@ class Mailupy:
         :return: Recipient ID
         :rtype: int
         """
+        query_parameters = ""
         payload = json.dumps({
             "Name": recipient_name,
             "Email": recipient_email,
             "Fields": self._build_mailup_fields(fields)
         })
+        if pending:
+            query_parameters = "ConfirmEmail=True"
+
         resp = self._requests_wrapper(
             'POST',
-            self._build_url(f'/List/{list_id}/Recipient'),
+            self._build_url(f'/List/{list_id}/Recipient', query_parameters=query_parameters),
             headers=self._default_headers(),
             data=payload
         )
