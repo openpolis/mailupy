@@ -67,7 +67,9 @@ client.get_subscribed_recipient_from_list(1, 'andrea.stagi@lotrek.it')
 Subscribe/Unsubscribe recipient to/from lists
 
 ```py
-recipient_id = client.subscribe_to_list(1, 'Andrea Stagi', 'stagi.andrea@gmail.com')
+recipient_id = client.subscribe_to_list(
+  1, 'Andrea Stagi', 'stagi.andrea@gmail.com', pending=False
+)
 
 client.unsubscribe_from_list(1, recipient_id)
 ```
