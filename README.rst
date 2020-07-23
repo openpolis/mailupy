@@ -5,6 +5,22 @@ mailupy
 
 |Latest Version| |codecov| |Build Status| |License: MIT|
 
+Contributing
+------------
+
+Any help is welcome, as long as you don't break the continuous
+integration. Fork the repository and open a Pull Request directly on the
+master branch. A maintainer will review and integrate your changes.
+
+Maintainers:
+
+-  `Andrea Stagi <https://github.com/astagi>`__
+-  `Edoardo Grassi <https://github.com/edoaxyz>`__
+
+Contributors:
+
+-  `Fabio Piras <https://github.com/Arussil>`__
+
 Install
 -------
 

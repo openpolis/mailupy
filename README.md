@@ -7,6 +7,21 @@
 [![Build Status](https://travis-ci.org/lotrekagency/mailupy.svg?branch=master)](https://travis-ci.org/lotrekagency/mailupy)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://github.com/lotrekagency/mailupy/blob/master/LICENSE)
 
+## Contributing
+
+Any help is welcome, as long as you don't break the continuous integration.
+Fork the repository and open a Pull Request directly on the master branch.
+A maintainer will review and integrate your changes.
+
+Maintainers:
+
+- [Andrea Stagi](https://github.com/astagi)
+- [Edoardo Grassi](https://github.com/edoaxyz)
+
+Contributors:
+
+- [Fabio Piras](https://github.com/Arussil)
+
 ## Install
 
 ```sh
