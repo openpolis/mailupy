@@ -424,6 +424,32 @@ class Mailupy:
         )
         return True
 
+    def send_sms(self, prefix, number, message_id):
+        """
+        Send a message to single recipient with its telephone number.
+        `Link to MailUp Docs
+        <https://help.mailup.com/display/mailupapi/Text+messages+-+SMS#TextmessagesSMS-SingleSend>`__
+        :param telephone: Recipient telephone number
+        :type number: str
+        :param message_id: Message ID
+        :type message_id: int, str
+        :raise mailupy.exceptions.MailupyRequestException: if response returns a status code >= 400
+        :return: ``True`` if creation was successful
+        :rtype: bool
+        """
+        payload = json.dumps({
+            "Number": number,
+            "Prefix": prefix,
+            "idMessage": message_id
+        })
+        self._requests_wrapper(
+            'POST',
+            self._build_url('/Sms/Send'),
+            headers=self._default_headers(),
+            data=payload
+        )
+        return True
+
     def create_group(self, list_id, group_name, notes=''):
         """
         Create a new group to a list with a given name.
