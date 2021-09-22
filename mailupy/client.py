@@ -429,7 +429,9 @@ class Mailupy:
         Send a message to single recipient with its telephone number.
         `Link to MailUp Docs
         <https://help.mailup.com/display/mailupapi/Text+messages+-+SMS#TextmessagesSMS-SingleSend>`__
-        :param telephone: Recipient telephone number
+        :param prefix: Recipient telephone number prefix
+        :type prefix: str
+        :param number: Recipient telephone number
         :type number: str
         :param message_id: Message ID
         :type message_id: int, str
