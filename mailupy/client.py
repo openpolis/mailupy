@@ -397,7 +397,7 @@ class Mailupy:
             return group['idGroup'], True
         return None, False
 
-    def send_message(self, email, message_id):
+    def send_message(self, email, message_id, fields={}):
         """
         Send a message to single recipient with its email.
 
@@ -414,7 +414,8 @@ class Mailupy:
         """
         payload = json.dumps({
             "Email": email,
-            "idMessage": message_id
+            "idMessage": message_id,
+            "Fields": self._build_mailup_fields(fields)
         })
         self._requests_wrapper(
             'POST',
@@ -424,7 +425,7 @@ class Mailupy:
         )
         return True
 
-    def send_sms(self, prefix, number, message_id):
+    def send_sms(self, prefix, number, message_id, fields={}):
         """
         Send a message to single recipient with its telephone number.
         `Link to MailUp Docs
@@ -442,7 +443,8 @@ class Mailupy:
         payload = json.dumps({
             "Number": number,
             "Prefix": prefix,
-            "idMessage": message_id
+            "idMessage": message_id,
+            "Fields": self._build_mailup_fields(fields)
         })
         self._requests_wrapper(
             'POST',

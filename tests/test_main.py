@@ -45,7 +45,7 @@ class TestClient(unittest.TestCase):
     @patch('mailupy.Mailupy._requests_wrapper', side_effect=mock_request)
     def test_send_message(self, func):
         m = Mailupy('username', 'password', 'client-id', 'client-secret')
-        assert m.send_sms('+39','3200410975', 1)
+        assert m.send_sms('+39','0000000000', 1)
 
     @patch('mailupy.Mailupy._requests_wrapper', side_effect=mock_request)
     def test_create_group(self, func):
