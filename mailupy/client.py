@@ -397,7 +397,7 @@ class Mailupy:
             return group['idGroup'], True
         return None, False
 
-    def send_message(self, email, message_id):
+    def send_message(self, email, message_id, fields={}):
         """
         Send a message to single recipient with its email.
 
@@ -414,11 +414,41 @@ class Mailupy:
         """
         payload = json.dumps({
             "Email": email,
-            "idMessage": message_id
+            "idMessage": message_id,
+            "Fields": self._build_mailup_fields(fields)
         })
         self._requests_wrapper(
             'POST',
             self._build_url('/Email/Send'),
+            headers=self._default_headers(),
+            data=payload
+        )
+        return True
+
+    def send_sms(self, prefix, number, message_id, fields={}):
+        """
+        Send a message to single recipient with its telephone number.
+        `Link to MailUp Docs
+        <https://help.mailup.com/display/mailupapi/Text+messages+-+SMS#TextmessagesSMS-SingleSend>`__
+        :param prefix: Recipient telephone number prefix
+        :type prefix: str
+        :param number: Recipient telephone number
+        :type number: str
+        :param message_id: Message ID
+        :type message_id: int, str
+        :raise mailupy.exceptions.MailupyRequestException: if response returns a status code >= 400
+        :return: ``True`` if creation was successful
+        :rtype: bool
+        """
+        payload = json.dumps({
+            "Number": number,
+            "Prefix": prefix,
+            "idMessage": message_id,
+            "Fields": self._build_mailup_fields(fields)
+        })
+        self._requests_wrapper(
+            'POST',
+            self._build_url('/Sms/Send'),
             headers=self._default_headers(),
             data=payload
         )
